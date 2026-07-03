@@ -25,3 +25,5 @@ log/
 # Secrets
 .env
 *.key
+# GitHub tokens accidentally created as files
+ghp_*
