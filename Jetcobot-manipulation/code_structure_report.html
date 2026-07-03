@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jetcobot Manipulation 코드 구조 분석</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --ink: #1d2430;
+      --muted: #5f6b7a;
+      --line: #d8dee8;
+      --accent: #0f766e;
+      --accent-2: #334155;
+      --warn: #b45309;
+      --danger: #b91c1c;
+      --code: #111827;
+      --code-bg: #eef2f7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.62;
+      letter-spacing: 0;
+    }
+    header {
+      background: #172033;
+      color: #fff;
+      padding: 34px 28px 28px;
+      border-bottom: 4px solid var(--accent);
+    }
+    header h1 { margin: 0 0 10px; font-size: 30px; }
+    header p { margin: 0; color: #d7dde8; max-width: 980px; }
+    main { max-width: 1160px; margin: 0 auto; padding: 26px 20px 56px; }
+    nav {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin-bottom: 18px;
+    }
+    nav a { color: var(--accent); text-decoration: none; margin-right: 16px; white-space: nowrap; }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      margin: 18px 0;
+    }
+    h2 { margin: 0 0 14px; font-size: 22px; color: #111827; }
+    h3 { margin: 22px 0 10px; font-size: 17px; color: #1f2937; }
+    p { margin: 8px 0 12px; }
+    ul, ol { padding-left: 22px; }
+    li { margin: 6px 0; }
+    code {
+      background: var(--code-bg);
+      color: var(--code);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.94em;
+    }
+    pre {
+      background: #111827;
+      color: #f8fafc;
+      padding: 14px 16px;
+      border-radius: 8px;
+      overflow: auto;
+      line-height: 1.45;
+      font-size: 13px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border: 1px solid var(--line); padding: 10px 12px; vertical-align: top; }
+    th { background: #eef2f7; text-align: left; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .card { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: #fbfcfe; }
+    .card h3 { margin-top: 0; }
+    .badge { display: inline-block; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 700; }
+    .server { background: #dbeafe; color: #1e40af; }
+    .arm { background: #dcfce7; color: #166534; }
+    .shared { background: #fef3c7; color: #92400e; }
+    .warn { border-left: 4px solid var(--warn); background: #fffbeb; padding: 12px 14px; border-radius: 6px; }
+    .danger { border-left: 4px solid var(--danger); background: #fef2f2; padding: 12px 14px; border-radius: 6px; }
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr 28px 1fr 28px 1fr;
+      gap: 8px;
+      align-items: center;
+      margin: 14px 0;
+    }
+    .node {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      padding: 12px;
+      min-height: 76px;
+    }
+    .arrow { text-align: center; color: var(--accent-2); font-weight: 700; }
+    .small { color: var(--muted); font-size: 13px; }
+    .diagram {
+      width: 100%;
+      max-width: 940px;
+      margin: 14px auto;
+      display: block;
+      background: #fbfcfe;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    .mono-list li { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    footer { color: var(--muted); font-size: 13px; margin-top: 22px; }
+    @media (max-width: 820px) {
+      .grid { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr; }
+      .arrow { transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Jetcobot Manipulation 코드 구조 분석</h1>
+    <p>노트북 서버와 Raspberry Pi/Jetcobot arm 클라이언트가 분리된 구조로, 서버는 YOLO 검출과 2D→3D 파지 계획을 담당하고 arm 쪽은 카메라 캡처, 안전 검증, MyCobot 제어를 담당한다.</p>
+  </header>
+  <main>
+    <nav>
+      <a href="#overview">개요</a>
+      <a href="#tree">디렉터리</a>
+      <a href="#flow">동작 흐름</a>
+      <a href="#server">서버</a>
+      <a href="#arm">Arm 클라이언트</a>
+      <a href="#api">API</a>
+      <a href="#config">설정</a>
+      <a href="#risks">주의점</a>
+    </nav>
+
+    <section id="overview">
+      <h2>1. 전체 개요</h2>
+      <div class="grid">
+        <div class="card">
+          <h3><span class="badge server">Laptop Server</span> Jetcobot-manipulation_server</h3>
+          <p>FastAPI 기반 서버다. 시작 시 YOLO 모델과 카메라 intrinsic, hand-eye 캘리브레이션을 로드한다. arm 클라이언트가 올린 이미지와 현재 Flange pose를 받아 검출과 좌표 변환을 수행하고 최종 <code>flange_command</code>를 반환한다.</p>
+        </div>
+        <div class="card">
+          <h3><span class="badge arm">Raspberry Pi / Jetcobot</span> Jetcobot-manipulation_arm</h3>
+          <p>카메라를 열고 MyCobot280을 제어한다. 서버 연결 확인, 카메라 미리보기 업로드, 원격 버튼 폴링, 파지 계획 요청, Pi-side 안전 검증, 로봇팔/그리퍼 동작을 수행한다.</p>
+        </div>
+      </div>
+      <p>중요한 설계 원칙은 <strong>무거운 인식/기하 계산은 노트북</strong>, <strong>실제 로봇 명령과 최종 안전 게이트는 Pi</strong>에 둔다는 점이다.</p>
+    </section>
+
+    <section id="tree">
+      <h2>2. 디렉터리 구조</h2>
+      <pre><code>Jetcobot-manipulation/
+├── README.md
+├── Jetcobot-manipulation_server/
+│   ├── run_server.py
+│   ├── app/
+│   │   ├── main.py          # FastAPI API, YOLO inference, camera-view, command queue
+│   │   ├── geometry.py      # 캘리브레이션 로드, pixel ray, Base 좌표 변환, flange plan
+│   │   └── settings.py      # server_config.ini 로더
+│   ├── config/server_config.ini
+│   ├── models/best.pt
+│   ├── calibration/
+│   └── laptop_detect_logs/
+└── Jetcobot-manipulation_arm/
+    ├── run_client.py
+    ├── check_server_connection.py
+    ├── robot_client/
+    │   ├── main.py          # Pi 메인 루프, 카메라 스트림 스레드, 원격 명령 처리
+    │   ├── api_client.py    # 서버 HTTP client
+    │   ├── robot_controller.py # MyCobot280/그리퍼 저수준 제어
+    │   └── config.py        # client_config.ini 로더
+    ├── config/client_config.ini
+    ├── marker.py            # 수동 ChArUco 캘리브레이션
+    └── auto_marker.py       # 자동 캘리브레이션</code></pre>
+    </section>
+
+    <section id="flow">
+      <h2>3. 실행 및 데이터 흐름</h2>
+      <h3>기본 실행 순서</h3>
+      <ol>
+        <li>노트북에서 <code>Jetcobot-manipulation_server/run_server.py</code> 실행.</li>
+        <li>서버가 <code>0.0.0.0:8000</code>에서 FastAPI 앱을 띄우고 YOLO/캘리브레이션을 로드.</li>
+        <li>Pi/Jetcobot에서 <code>Jetcobot-manipulation_arm/run_client.py</code> 실행.</li>
+        <li>arm 클라이언트가 <code>/health</code>로 서버를 확인하고 카메라, MyCobot을 초기화.</li>
+        <li>카메라 producer thread가 최신 프레임 buffer를 갱신하고, 스트림 스레드가 상태 오버레이를 그려 <code>POST /camera-frame</code>으로 업로드.</li>
+        <li>노트북 브라우저는 <code>/camera-view</code>에서 MJPEG 스트림 <code>/camera-frame/stream.mjpg</code>를 표시.</li>
+      </ol>
+      <h3>G 버튼 또는 g 키 파지 흐름</h3>
+      <div class="flow">
+        <div class="node"><strong>Pi 카메라/로봇 상태</strong><br><span class="small">fresh frame + current flange coords</span></div>
+        <div class="arrow">→</div>
+        <div class="node"><strong>서버 YOLO + Geometry</strong><br><span class="small">bbox center → ray → Base plane → flange_command</span></div>
+        <div class="arrow">→</div>
+        <div class="node"><strong>Pi 안전 검증 + 실행</strong><br><span class="small">workspace gate → send_coords → gripper close</span></div>
+      </div>
+      <pre><code>POST /v1/grasp-plan
+  form image: JPEG frame
+  form robot_state: { request_id, flange_coords: [x,y,z,rx,ry,rz] }
+
+response
+  status: ok | not_found
+  detection: selected object
+  plan.flange_command: [x,y,z,rx,ry,rz]</code></pre>
+
+      <h3>YOLO 검출 후 좌표 계산 그림</h3>
+      <svg class="diagram" viewBox="0 0 940 270" role="img" aria-label="YOLO detection to robot flange command workflow">
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L8,3 z" fill="#334155"></path>
+          </marker>
+        </defs>
+        <rect x="24" y="34" width="150" height="72" rx="8" fill="#dbeafe" stroke="#93c5fd"></rect>
+        <text x="99" y="62" text-anchor="middle" font-size="15" font-weight="700" fill="#1e3a8a">Camera Frame</text>
+        <text x="99" y="86" text-anchor="middle" font-size="12" fill="#1e40af">640x480 image</text>
+
+        <rect x="214" y="34" width="150" height="72" rx="8" fill="#dcfce7" stroke="#86efac"></rect>
+        <text x="289" y="62" text-anchor="middle" font-size="15" font-weight="700" fill="#166534">YOLO</text>
+        <text x="289" y="86" text-anchor="middle" font-size="12" fill="#166534">bbox + score</text>
+
+        <rect x="404" y="34" width="150" height="72" rx="8" fill="#fef3c7" stroke="#fcd34d"></rect>
+        <text x="479" y="62" text-anchor="middle" font-size="15" font-weight="700" fill="#92400e">Pixel Center</text>
+        <text x="479" y="86" text-anchor="middle" font-size="12" fill="#92400e">u, v midpoint</text>
+
+        <rect x="594" y="34" width="150" height="72" rx="8" fill="#ede9fe" stroke="#c4b5fd"></rect>
+        <text x="669" y="62" text-anchor="middle" font-size="15" font-weight="700" fill="#5b21b6">Calibration</text>
+        <text x="669" y="86" text-anchor="middle" font-size="12" fill="#5b21b6">intrinsic + hand-eye</text>
+
+        <rect x="784" y="34" width="132" height="72" rx="8" fill="#fee2e2" stroke="#fca5a5"></rect>
+        <text x="850" y="62" text-anchor="middle" font-size="15" font-weight="700" fill="#991b1b">Base Ray</text>
+        <text x="850" y="86" text-anchor="middle" font-size="12" fill="#991b1b">3D direction</text>
+
+        <line x1="174" y1="70" x2="206" y2="70" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"></line>
+        <line x1="364" y1="70" x2="396" y2="70" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"></line>
+        <line x1="554" y1="70" x2="586" y2="70" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"></line>
+        <line x1="744" y1="70" x2="776" y2="70" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"></line>
+
+        <rect x="72" y="166" width="190" height="76" rx="8" fill="#f8fafc" stroke="#cbd5e1"></rect>
+        <text x="167" y="194" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">Target Z Plane</text>
+        <text x="167" y="218" text-anchor="middle" font-size="12" fill="#475569">object_plane_z + z_offset</text>
+
+        <rect x="374" y="166" width="190" height="76" rx="8" fill="#f8fafc" stroke="#cbd5e1"></rect>
+        <text x="469" y="194" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">TCP Target</text>
+        <text x="469" y="218" text-anchor="middle" font-size="12" fill="#475569">ray and plane intersection</text>
+
+        <rect x="676" y="166" width="190" height="76" rx="8" fill="#f8fafc" stroke="#cbd5e1"></rect>
+        <text x="771" y="194" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">Flange Command</text>
+        <text x="771" y="218" text-anchor="middle" font-size="12" fill="#475569">TCP offset corrected pose</text>
+
+        <line x1="850" y1="106" x2="850" y2="136" stroke="#334155" stroke-width="2"></line>
+        <line x1="850" y1="136" x2="167" y2="136" stroke="#334155" stroke-width="2"></line>
+        <line x1="167" y1="136" x2="167" y2="158" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"></line>
+        <line x1="262" y1="204" x2="366" y2="204" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"></line>
+        <line x1="564" y1="204" x2="668" y2="204" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"></line>
+      </svg>
+      <p>로봇은 단순히 정해진 Z만큼 내려가는 것이 아니다. YOLO bbox 중심에서 나온 camera ray를 현재 Flange pose, camera intrinsic, hand-eye calibration으로 Base 좌표계 ray로 바꾼 뒤, <code>object_plane_z_base_mm + toothbrush_target_z_offset_mm</code> 평면과 만나는 TCP 목표를 계산한다. 이후 <code>tcp_offset_flange_to_tcp_mm</code>를 보정해 최종 <code>flange_command</code> 전체 좌표 <code>[x,y,z,rx,ry,rz]</code>를 만든다.</p>
+    </section>
+
+    <section id="server">
+      <h2>4. 노트북 서버 코드 설명</h2>
+      <table>
+        <tr><th>파일</th><th>역할</th><th>핵심 포인트</th></tr>
+        <tr>
+          <td><code>run_server.py</code></td>
+          <td>FastAPI 서버 실행 진입점</td>
+          <td><code>server_config.ini</code>의 host/port를 사용해 uvicorn 실행.</td>
+        </tr>
+        <tr>
+          <td><code>app/settings.py</code></td>
+          <td>서버 설정 로드</td>
+          <td>YOLO 모델 경로, device, confidence, 캘리브레이션 파일, 이미지 크기 제한을 dataclass로 제공.</td>
+        </tr>
+        <tr>
+          <td><code>app/main.py</code></td>
+          <td>API, YOLO inference, camera-view, 원격 명령 큐</td>
+          <td>시작 시 모델/캘리브레이션을 한 번 로드. <code>state.inference_lock</code>으로 YOLO 동시 접근 보호.</td>
+        </tr>
+        <tr>
+          <td><code>app/geometry.py</code></td>
+          <td>2D 검출 결과를 3D 파지 명령으로 변환</td>
+          <td>pixel center를 undistort한 ray로 만들고, hand-eye <code>^fT_c</code>와 현재 flange pose를 이용해 Base 좌표계의 TCP 목표를 계산.</td>
+        </tr>
+      </table>
+
+      <h3>서버 상태 객체</h3>
+      <p><code>ServerState</code>는 YOLO 모델, 캘리브레이션, inference lock, 최신 카메라 JPEG, MJPEG 표시용 metadata, 원격 명령 queue를 들고 있다. 이 구조 덕분에 API 함수들이 같은 런타임 상태를 공유한다.</p>
+
+      <h3>YOLO 검출과 파지 계획</h3>
+      <p><code>_run_inference()</code>는 Ultralytics YOLO를 실행하고, confidence 기준으로 detection 목록을 만든다. <code>_create_grasp_plan()</code>은 가장 높은 confidence detection 하나를 선택해 <code>compute_grasp_plan()</code>에 넘긴다.</p>
+      <pre><code>YOLO bbox [x1,y1,x2,y2]
+→ bbox midpoint (u,v)
+→ cv2.undistortPoints()로 camera ray
+→ ^bT_c = ^bT_f @ ^fT_c
+→ object_plane_z_base_mm 평면과 ray 교차
+→ tcp_offset_flange_to_tcp_mm 보정
+→ flange_command 반환</code></pre>
+
+      <h3>카메라 화면</h3>
+      <p>arm 클라이언트가 <code>POST /camera-frame</code>으로 올린 JPEG bytes를 서버가 재인코딩 없이 저장하고, 브라우저는 <code>/camera-frame/stream.mjpg</code>로 MJPEG 스트림을 본다. 상태 텍스트는 <code>/camera-frame/status</code>를 1초마다 조회한다.</p>
+
+      <h3>원격 버튼</h3>
+      <p><code>/camera-view</code>에는 G/P/Q/R/T/W/X 버튼이 있고, 버튼 클릭은 <code>POST /robot-command/{command}</code>로 서버 queue에 명령을 넣는다. arm 클라이언트는 <code>GET /robot-command/next</code>를 폴링해 키 입력과 같은 로직으로 처리한다.</p>
+    </section>
+
+    <section id="arm">
+      <h2>5. Arm 클라이언트 코드 설명</h2>
+      <table>
+        <tr><th>파일</th><th>역할</th><th>핵심 포인트</th></tr>
+        <tr>
+          <td><code>run_client.py</code></td>
+          <td>Pi 실행 진입점</td>
+          <td><code>robot_client.main.main()</code> 호출.</td>
+        </tr>
+        <tr>
+          <td><code>robot_client/config.py</code></td>
+          <td>클라이언트 설정 로드</td>
+          <td>서버 URL, 카메라, 스트리밍, 원격 제어, 로봇 속도, 안전 범위 등을 읽는다. <code>camera_id</code>는 숫자 또는 <code>/dev/videoX</code> 경로 모두 가능.</td>
+        </tr>
+        <tr>
+          <td><code>robot_client/api_client.py</code></td>
+          <td>서버 HTTP 통신</td>
+          <td><code>/health</code>, <code>/camera-frame</code>, <code>/robot-command/next</code>, <code>/v1/grasp-plan</code> 호출 담당. 네트워크 오류 시 배포 상황에 맞는 힌트를 제공.</td>
+        </tr>
+        <tr>
+          <td><code>robot_client/main.py</code></td>
+          <td>메인 제어 루프</td>
+          <td>카메라 open, 서버 preflight, home 이동, 원격 명령 처리, G/P/Q/R/T/W/X 동작 실행. 카메라 캡처 producer와 스트리밍은 별도 스레드로 계속 동작.</td>
+        </tr>
+        <tr>
+          <td><code>robot_client/robot_controller.py</code></td>
+          <td>MyCobot280 제어</td>
+          <td>Flange mode 설정, 좌표 읽기, <code>send_coords</code>, target 도달 대기, 그리퍼 open/close, throw 모드 실행.</td>
+        </tr>
+      </table>
+
+      <h3>클라이언트 메인 루프</h3>
+      <p><code>main.py</code>는 시작 시 서버 health check, 카메라 해상도 검증, MyCobot 초기화, home/open 동작을 수행한다. 이후 루프에서는 로컬 키 또는 서버 원격 명령을 같은 <code>key</code> 값으로 정규화해 처리한다.</p>
+      <ul>
+        <li><code>g</code>: 현재 flange pose와 fresh frame을 서버로 보내 grasp plan 요청.</li>
+        <li><code>p</code>: 현재 Flange pose를 읽어 콘솔과 화면 overlay 상태에 표시.</li>
+        <li><code>q</code>: 그리퍼 close/open 토글. 물체를 수동으로 잡거나 놓을 때 사용.</li>
+        <li><code>r</code>: home 주변의 제한된 범위 안에서 안전 랜덤 Flange pose로 이동.</li>
+        <li><code>t</code>: grasp 이후 throw 동작 시작.</li>
+        <li><code>w</code>: 현재 동작을 중단하고 gripper 상태와 관계없이 home 위치로 복귀.</li>
+        <li><code>x</code>: throw 중이면 abort/stop 후 클라이언트 종료.</li>
+      </ul>
+
+      <h3>카메라 스트리밍 스레드</h3>
+      <p>카메라 화면이 G 동작 중 멈추지 않도록 <code>camera_capture_worker()</code>가 카메라를 단독으로 읽고 최신 frame buffer를 갱신한다. <code>camera_stream_worker()</code>는 이 buffer의 복사본을 서버로 업로드한다. 메인 루프가 YOLO 응답이나 로봇 이동 완료를 기다려도 캡처와 스트리밍은 계속 진행된다.</p>
+
+      <h3>안전 검증</h3>
+      <p>서버가 보낸 <code>flange_command</code>는 Pi에서 다시 검증된다. X/Y/Z 범위, Euler 각도 절대값, 숫자 유효성, 리스트 길이를 확인한 뒤에만 실제 로봇 명령을 보낸다. 이 final safety gate는 서버 계산 오류나 네트워크 데이터 오류가 실제 움직임으로 이어지는 것을 막는 핵심 방어선이다.</p>
+    </section>
+
+    <section id="api">
+      <h2>6. 주요 API 목록</h2>
+      <table>
+        <tr><th>Method</th><th>Path</th><th>호출 주체</th><th>설명</th></tr>
+        <tr><td>GET</td><td><code>/health</code></td><td>Pi, 운영자</td><td>서버 실행 상태, runtime, model path, device, 캘리브레이션 method 확인.</td></tr>
+        <tr><td>GET</td><td><code>/camera-view</code></td><td>브라우저</td><td>로봇 카메라 MJPEG 화면과 G/P/Q/R/T/W/X 버튼 UI.</td></tr>
+        <tr><td>POST</td><td><code>/camera-frame</code></td><td>Pi</td><td>최신 카메라 미리보기 JPEG 업로드.</td></tr>
+        <tr><td>GET</td><td><code>/camera-frame/stream.mjpg</code></td><td>브라우저</td><td>Pi가 업로드한 JPEG bytes를 재인코딩 없이 MJPEG로 스트리밍.</td></tr>
+        <tr><td>GET</td><td><code>/camera-frame/status</code></td><td>브라우저</td><td>프레임 크기, source, age 표시용 metadata.</td></tr>
+        <tr><td>POST</td><td><code>/robot-command/{g|p|q|r|t|w|x}</code></td><td>브라우저</td><td>원격 동작 명령을 서버 queue에 추가. P는 현재 pose 조회, Q는 그리퍼 토글, X는 클라이언트 종료.</td></tr>
+        <tr><td>GET</td><td><code>/robot-command/next</code></td><td>Pi</td><td>다음 원격 명령 하나를 가져감.</td></tr>
+        <tr><td>POST</td><td><code>/v1/grasp-plan</code></td><td>Pi</td><td>YOLO 검출과 3D 파지 계획 요청.</td></tr>
+        <tr><td>POST</td><td><code>/detect</code></td><td>테스트/호환</td><td>YOLO 검출만 수행하고 detection 목록 반환.</td></tr>
+      </table>
+      <div class="warn"><strong>주의:</strong> <code>/v1/grasp-plan</code>, <code>/camera-frame</code>, <code>/robot-command/g</code>는 POST endpoint다. 브라우저 주소창에서 직접 열면 <code>Method Not Allowed</code>가 정상이다. 화면은 <code>/camera-view</code>를 열어야 한다.</div>
+    </section>
+
+    <section id="config">
+      <h2>7. 설정 파일 핵심 항목</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>server_config.ini</h3>
+          <ul>
+            <li><code>[server] host = 0.0.0.0</code>: Pi에서 노트북 LAN IP로 접속 가능하게 유지.</li>
+            <li><code>port = 8000</code>: FastAPI 서버 포트.</li>
+            <li><code>model_path = models/best.pt</code>: YOLO 가중치.</li>
+            <li><code>device = cuda:0</code>: GPU 사용. GPU가 없으면 <code>cpu</code> 필요.</li>
+            <li><code>expected_image_width/height = 640/480</code>: Pi 카메라 해상도와 반드시 일치.</li>
+            <li><code>intrinsic_file</code>, <code>handeye_result_json</code>: 2D→3D 변환의 기반.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>client_config.ini</h3>
+          <ul>
+            <li><code>grasp_server_url</code>: 노트북의 현재 LAN IP와 포트 8000 사용. 기본 서버 주소는 <code>192.168.0.11</code> 기준으로 관리.</li>
+            <li><code>camera_stream fps = 4.0</code>, <code>timeout_sec = 0.8</code>, <code>jpeg_quality = 45</code>: 미리보기 스트리밍 부하/화질.</li>
+            <li><code>camera_id</code>: <code>0</code> 또는 <code>/dev/video2</code> 같은 실제 장치 경로.</li>
+            <li><code>move_speed</code>, <code>move_timeout_sec</code>: 로봇 이동 속도와 대기 시간.</li>
+            <li><code>random_motion</code>: R 명령의 home 기준 x/y/z 랜덤 반경.</li>
+            <li><code>dry_run</code>: 실제 로봇 명령 차단 여부. 첫 테스트는 true 권장.</li>
+            <li><code>show_window = false</code>: Pi에 GUI DISPLAY가 없으면 false 유지.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="calibration">
+      <h2>8. 캘리브레이션 코드</h2>
+      <p><code>marker.py</code>는 수동 ChArUco 촬영 기반 캘리브레이션, <code>auto_marker.py</code>는 로봇이 여러 자세로 움직이며 자동으로 샘플을 수집하는 캘리브레이션 스크립트다. 결과물은 camera intrinsic과 eye-in-hand hand-eye transform이며, 서버의 <code>geometry.py</code>가 이 값을 사용한다.</p>
+      <ul>
+        <li><code>camera_intrinsic_charuco.npz</code>: 카메라 행렬 K와 distortion.</li>
+        <li><code>auto_handeye_result_*.json</code>: 선택된 hand-eye method와 <code>T_gripper_camera</code>.</li>
+        <li><code>auto_handeye_charuco_samples_*.npz</code>: 재검증 가능한 샘플 데이터.</li>
+      </ul>
+    </section>
+
+    <section id="risks">
+      <h2>9. 운영상 주의점과 개선 포인트</h2>
+      <div class="danger"><strong>실제 로봇 동작 전:</strong> <code>dry_run = true</code>로 서버 응답, detection, <code>flange_command</code>, workspace gate 결과를 먼저 확인해야 한다.</div>
+      <h3>자주 발생하는 문제</h3>
+      <ul>
+        <li><strong>서버 연결 timeout:</strong> Pi의 <code>grasp_server_url</code>이 노트북 현재 IP인지 확인. 같은 LAN이어야 한다.</li>
+        <li><strong>Method Not Allowed:</strong> POST endpoint를 브라우저 주소창에서 연 경우다. 브라우저는 <code>/camera-view</code>만 연다.</li>
+        <li><strong>OpenCV xcb/display 오류:</strong> Pi에서 로컬 창을 띄우려 한 경우다. <code>show_window = false</code> 유지.</li>
+        <li><strong>Cannot open camera:</strong> <code>v4l2-ctl --list-devices</code> 또는 <code>ls -l /dev/video*</code>로 실제 capture 장치를 찾아 <code>camera_id</code>를 맞춘다.</li>
+        <li><strong>파지 좌표 이상:</strong> 캘리브레이션 파일, Euler order, 카메라 해상도, 테이블 plane Z를 우선 확인한다.</li>
+      </ul>
+      <h3>개선 포인트</h3>
+      <ul>
+        <li><strong>적용됨:</strong> 카메라 캡처를 producer thread + 최신 frame buffer 구조로 바꿔 메인 루프, 스트리밍, G 동작이 같은 <code>VideoCapture.read()</code>를 경쟁하지 않게 한다.</li>
+        <li><strong>적용됨:</strong> 실시간성 우선으로 <code>save_results = false</code>를 기본값으로 낮춰 grasp-plan 요청마다 raw/annotated/json을 쓰는 디스크 I/O를 줄인다.</li>
+        <li><strong>남은 선택 개선:</strong> Pi→server 프레임 전송도 persistent MJPEG/WebSocket으로 바꾸면 현재 프레임별 HTTP POST보다 지연과 부하를 더 줄일 수 있다.</li>
+        <li><strong>설정 필요:</strong> YOLO target class가 정해져 있으면 <code>default_target_label</code>을 설정해 잘못된 물체 선택을 줄인다.</li>
+      </ul>
+    </section>
+
+    <section id="today">
+      <h2>10. 2026-07-02 수정사항 요약</h2>
+      <ul>
+        <li>서버 카메라 표시를 MJPEG 기반으로 유지하되, Pi가 업로드한 JPEG bytes를 서버가 재인코딩하지 않고 그대로 스트림에 사용하도록 변경.</li>
+        <li>카메라 스트림 기본값을 안정성 우선으로 <code>fps = 4.0</code>, <code>timeout_sec = 0.8</code>, <code>jpeg_quality = 45</code>로 조정.</li>
+        <li>arm 클라이언트 HTTP 통신에 <code>requests.Session()</code>을 적용해 반복 요청의 연결 재사용을 가능하게 함.</li>
+        <li>카메라 캡처를 producer thread + 최신 frame buffer 구조로 변경해 메인 루프와 스트리밍이 직접 <code>VideoCapture.read()</code>를 경쟁하지 않도록 함.</li>
+        <li><code>R</code> 명령을 추가해 home 주변의 제한된 범위 안에서 safe random Flange pose로 이동할 수 있게 함.</li>
+        <li><code>W</code> 명령은 gripper 상태와 관계없이 현재 동작을 중단하고 home 위치로 복귀하도록 변경.</li>
+        <li><code>P</code> 명령을 추가해 현재 Flange pose를 읽어 콘솔과 화면 상태에 표시하도록 함.</li>
+        <li><code>Q</code> 명령을 종료에서 그리퍼 close/open 토글로 변경하고, 종료 명령은 <code>X</code>로 분리.</li>
+        <li><code>client_config.ini</code>의 노트북 서버 주소는 앞으로 <code>192.168.0.11:8000</code> 기준으로 맞추기로 정리.</li>
+        <li>실시간성을 위해 서버 결과 저장 기본값을 <code>save_results = false</code>로 변경.</li>
+      </ul>
+    </section>
+
+    <section id="today-20260703">
+      <h2>11. 2026-07-03 수정사항 요약</h2>
+      <ul>
+        <li>원격 명령을 <code>/robot-command/next</code> polling 방식에서 <code>/robot-command/stream</code> server-push 스트림 방식으로 변경. 웹 버튼을 눌러도 arm 클라이언트가 주기적으로 HTTP polling하지 않는다.</li>
+        <li><code>S</code>, <code>F</code>, <code>M</code> 명령을 추가. <code>S</code>는 전체 서보 토크 해제, <code>F</code>는 전체 서보 활성화, <code>M</code>은 <code>client_config.ini</code>의 지정 Flange 좌표로 이동한다.</li>
+        <li>웹 <code>Detect</code> 버튼은 live MJPEG 이미지를 정지 이미지로 바꾸지 않고, 최신 프레임에 YOLO를 실행한 결과를 live 스트림 위에 3초 동안 overlay하도록 변경.</li>
+        <li><code>G</code> 파지 후 표시되는 bbox/score overlay는 3초 뒤 자동으로 사라지도록 변경해 오래된 detection이 현재 결과처럼 남지 않게 했다.</li>
+        <li>학습 실험용 <code>dl_server/box.yaml</code>과 <code>dl_server/yolo_train.py</code>를 <code>Box.v1i.yolov11</code> 데이터셋과 <code>yolo11s.pt</code> 기준으로 준비했다.</li>
+      </ul>
+    </section>
+
+    <section id="quickstart">
+      <h2>12. 빠른 실행 체크리스트</h2>
+      <pre><code># Laptop
+cd Jetcobot-manipulation/Jetcobot-manipulation_server
+python3 run_server.py
+
+# Pi / Jetcobot
+cd Jetcobot-manipulation/Jetcobot-manipulation_arm
+python3 check_server_connection.py
+python3 run_client.py
+
+# Browser
+http://&lt;LAPTOP_LAN_IP&gt;:8000/camera-view</code></pre>
+    </section>
+
+    <footer>
+      Generated from local source under <code>/home/ane/dev_ws/Jetcobot-manipulation</code>. This document reflects the current code structure, including MJPEG camera view, producer frame buffer, server-push remote command stream, S/F/M servo and manual motion commands, timed detection overlays, and the YOLO-to-Flange grasp workflow.
+    </footer>
+  </main>
+</body>
+</html>

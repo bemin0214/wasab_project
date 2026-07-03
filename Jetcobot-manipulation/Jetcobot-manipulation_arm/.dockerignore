@@ -1,0 +1,9 @@
+.git
+.venv
+__pycache__/
+*.pyc
+charuco_captures/
+auto_charuco_captures_*/
+images/
+*.npz
+*.json
