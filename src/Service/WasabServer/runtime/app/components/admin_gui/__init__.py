@@ -1,1 +1,0 @@
-"""AdminGUI component package."""
