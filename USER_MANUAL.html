@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>WaSaB 통합 시스템 사용자 매뉴얼</title>
+  <style>
+    :root{--navy:#152540;--blue:#2f6df0;--green:#158a5c;--orange:#d1551f;--yellow:#e3a008;--red:#d62f22;--ink:#192234;--muted:#617089;--line:#dbe2ec;--bg:#f4f7fb;--card:#fff}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;line-height:1.65}
+    header{background:linear-gradient(135deg,#12213b,#2858ad);color:#fff;padding:54px 24px 48px}header .wrap,main{max-width:1080px;margin:auto}header h1{margin:0;font-size:36px;letter-spacing:-1px}header p{margin:8px 0 0;color:#dce7ff;font-size:16px}.meta{margin-top:20px;display:flex;gap:8px;flex-wrap:wrap}.meta span{background:#ffffff18;border:1px solid #ffffff35;border-radius:20px;padding:5px 11px;font-size:12px}
+    main{padding:28px 20px 70px}.toc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 5px 18px #18223a0a}.toc h2{margin-top:0}.toc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.toc a{color:var(--blue);text-decoration:none;background:#eef3ff;border-radius:9px;padding:9px 11px;font-weight:700;font-size:13px}
+    section{scroll-margin-top:18px}h2{font-size:25px;margin:42px 0 14px;letter-spacing:-.4px}h3{font-size:18px;margin:25px 0 9px}.lead{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:17px;box-shadow:0 4px 15px #18223a08}.card h3{margin:0 0 6px;font-size:16px}.card p{margin:0;color:var(--muted);font-size:14px}
+    .step{display:grid;grid-template-columns:38px 1fr;gap:12px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:14px;margin:9px 0}.num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--blue);color:#fff;font-weight:800}.step h3{margin:1px 0 3px;font-size:16px}.step p{margin:0;color:var(--muted)}
+    .note,.warning,.danger{padding:14px 16px;border-radius:11px;margin:14px 0;border-left:5px solid}.note{background:#edf4ff;border-color:var(--blue)}.warning{background:#fff7dc;border-color:var(--yellow)}.danger{background:#fff0ef;border-color:var(--red)}
+    table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 15px #18223a08}th,td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#edf2f9;font-size:13px}td{font-size:14px}.badge{display:inline-block;border-radius:20px;padding:3px 9px;font-size:12px;font-weight:800}.green{background:#e5f6ee;color:var(--green)}.blue{background:#e8efff;color:var(--blue)}.orange{background:#fff0e8;color:var(--orange)}.yellow{background:#fff4cc;color:#896000}.red{background:#ffebe9;color:var(--red)}.gray{background:#edf0f4;color:var(--muted)}
+    .screen{background:#152033;color:#e6edf8;border-radius:15px;padding:18px;margin:14px 0}.screen strong{color:#fff}.screen ul{margin:8px 0 0;padding-left:20px}.screen li{margin:5px 0;color:#cbd6e8}code{background:#e9eef6;color:#264b91;border-radius:5px;padding:2px 5px}.checklist{list-style:none;padding:0}.checklist li{background:#fff;border:1px solid var(--line);border-radius:10px;margin:7px 0;padding:10px 13px}.checklist li::before{content:"✓";color:var(--green);font-weight:900;margin-right:9px}.flow{display:flex;align-items:center;gap:9px;overflow:auto}.flow div{background:#fff;border:2px solid var(--line);border-radius:12px;padding:14px;min-width:150px;text-align:center;font-weight:700}.flow span{color:var(--blue);font-size:22px;font-weight:900}
+    footer{text-align:center;color:var(--muted);padding:25px}.top{position:fixed;right:18px;bottom:18px;width:42px;height:42px;border-radius:50%;background:var(--navy);color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 16px #0003}
+    @media(max-width:760px){header h1{font-size:28px}.toc-grid,.grid{grid-template-columns:1fr}.flow{flex-direction:column;align-items:stretch}.flow span{transform:rotate(90deg);text-align:center}table{display:block;overflow:auto}}
+    @media print{body{background:#fff}.top{display:none}header{padding:28px 20px;background:#fff;color:#000;border-bottom:2px solid #000}header p,.meta span{color:#333}.meta span{border-color:#aaa}.card,.toc,table{box-shadow:none}section{break-inside:avoid}a{color:#000;text-decoration:none}}
+  </style>
+</head>
+<body id="top">
+<header><div class="wrap"><h1>WaSaB 통합 시스템 사용자 매뉴얼</h1><p>수업 보조 · 교내 순찰 · 로봇암 제어를 위한 운영자 안내서</p><div class="meta"><span>버전 1.0</span><span>2026-08-04</span><span>관리자·교직원용</span></div></div></header>
+<main>
+  <nav class="toc"><h2>목차</h2><div class="toc-grid">
+    <a href="#safety">1. 사용 전 안전 확인</a><a href="#start">2. 시스템 시작</a><a href="#login">3. 로그인</a>
+    <a href="#home">4. 홈 화면</a><a href="#teacher">5. 수업 보조</a><a href="#patrol">6. 순찰 당직</a>
+    <a href="#arms">7. 로봇암 기능</a><a href="#status">8. 현황·알림</a><a href="#estop">9. 비상정지</a>
+    <a href="#finish">10. 종료</a><a href="#trouble">11. 문제 해결</a><a href="#quick">12. 빠른 점검표</a>
+  </div></nav>
+
+  <section id="safety"><h2>1. 사용 전 안전 확인</h2><div class="danger"><strong>로봇을 움직이기 전에 반드시 확인하세요.</strong> 로봇팔과 이동로봇의 동작 반경에 사람, 의자, 가방 등 장애물이 없어야 합니다.</div>
+    <ul class="checklist"><li>왼팔·오른팔 주변의 작업 공간이 비어 있습니다.</li><li>그리퍼에 끼이거나 떨어질 위험이 있는 물체가 없습니다.</li><li>Pinky 이동 경로와 순찰 구역에 장애물이 없습니다.</li><li>카메라, 전원, USB 시리얼 케이블이 연결되어 있습니다.</li><li>운영자는 화면 상단의 빨간색 <b>정지</b> 버튼 위치를 알고 있습니다.</li></ul>
+  </section>
+
+  <section id="start"><h2>2. 시스템 시작</h2><p class="lead">일반 운영은 WaSaB 통합 실행기를 사용합니다.</p>
+    <div class="step"><div class="num">1</div><div><h3>통합 실행기 열기</h3><p>Ubuntu 바탕화면의 <b>WaSaB 통합 실행기</b>를 더블클릭합니다.</p></div></div>
+    <div class="step"><div class="num">2</div><div><h3>실행 항목 선택</h3><p>필요한 Server &amp; GUI, Left/Right Arm, Pinky 항목을 체크합니다. 전체 구동 시 <b>ALL SELECT</b>를 사용합니다.</p></div></div>
+    <div class="step"><div class="num">3</div><div><h3>주소 확인</h3><p>AI Server IP, 로봇팔 IP와 ROS Domain, 각 Pinky의 IP와 Domain이 실제 장치 설정과 일치하는지 확인합니다.</p></div></div>
+    <div class="step"><div class="num">4</div><div><h3>선택 항목 시작</h3><p>시작 버튼을 누르고 Status가 실행 중으로 바뀔 때까지 기다립니다. 통합 GUI는 준비 후 자동으로 열립니다.</p></div></div>
+    <div class="note">GUI가 자동으로 열리지 않으면 같은 PC의 브라우저에서 <code>http://127.0.0.1:8100</code>에 접속합니다.</div>
+  </section>
+
+  <section id="login"><h2>3. 로그인</h2><div class="grid">
+    <div class="card"><h3>아이디 로그인</h3><p>발급받은 아이디와 비밀번호를 입력한 뒤 로그인 버튼을 누릅니다.</p></div>
+    <div class="card"><h3>Face 로그인</h3><p>Face 로그인 버튼을 누르고 카메라 정면을 바라봅니다. 등록 얼굴과 일치하면 자동 로그인됩니다.</p></div>
+    <div class="card"><h3>관리자 계정</h3><p>계정관리와 로봇암 현황 등 관리자 기능이 표시됩니다. 계정 정보는 관리자에게 문의합니다.</p></div>
+  </div><div class="warning">얼굴을 인식하지 못하면 조명을 확인하고 카메라 중앙에서 다시 시도합니다. 계속 실패하면 아이디 로그인을 사용합니다.</div></section>
+
+  <section id="home"><h2>4. 홈 화면 사용</h2><div class="screen"><strong>홈 화면에서 확인할 수 있는 정보</strong><ul><li>운영 중·대기·충전·경고 로봇 수</li><li>실시간 위치맵과 Pinky 위치</li><li>로봇별 온라인 상태, 임무, 배터리</li><li>로봇팔 기능 바로가기와 실행 상태</li></ul></div>
+    <h3>홈의 로봇팔 바로가기</h3><table><thead><tr><th>기능</th><th>대상</th><th>화면 상태</th></tr></thead><tbody>
+      <tr><td>선물주기</td><td>Dual Arm</td><td><span class="badge gray">대기</span> → <span class="badge blue">명령 전송 중</span> → <span class="badge green">실행 요청 완료</span></td></tr>
+      <tr><td>교보재 올리기</td><td>Left Arm</td><td>명령 전송 상태가 기능명 아래에 표시됩니다.</td></tr>
+      <tr><td>분리수거</td><td>Left Arm</td><td>실패하면 <span class="badge red">실행 실패</span>와 오류창이 표시됩니다.</td></tr>
+    </tbody></table>
+  </section>
+
+  <section id="teacher"><h2>5. 수업 보조</h2><div class="flow"><div>가용 Pinky 선택</div><span>→</span><div>필요 기능 선택</div><span>→</span><div>동작 확인</div><span>→</span><div>홈 복귀</div></div>
+    <h3>버튼 지시</h3><table><thead><tr><th>버튼</th><th>설명</th><th>인증</th></tr></thead><tbody>
+      <tr><td>교실이동</td><td>선택한 Pinky를 교실 위치로 이동시킵니다.</td><td>얼굴 인증 필요</td></tr>
+      <tr><td>홈복귀</td><td>선택한 Pinky를 홈 도크로 복귀시킵니다.</td><td>얼굴 인증 필요</td></tr>
+      <tr><td><span class="badge yellow">선물주기</span></td><td>Dual Arm의 선물 전달 동작을 실행합니다.</td><td>바로 사용 가능</td></tr>
+      <tr><td><span class="badge yellow">교보재 올리기</span></td><td>Left Arm의 Help 동작을 실행합니다.</td><td>바로 사용 가능</td></tr>
+    </tbody></table>
+    <div class="note">로봇팔 기능은 버튼을 누른 뒤 나타나는 확인창에서 승인해야 실제 명령이 전송됩니다.</div>
+  </section>
+
+  <section id="patrol"><h2>6. 순찰 당직</h2><div class="step"><div class="num">1</div><div><h3>가용 로봇 선택</h3><p>순찰 홈에서 온라인·대기 상태인 Pinky를 선택합니다.</p></div></div>
+    <div class="step"><div class="num">2</div><div><h3>순찰 시작</h3><p>순찰 시작을 누르면 지정 경로 자율 순회가 시작됩니다. 위치맵과 현재 구역을 확인합니다.</p></div></div>
+    <div class="step"><div class="num">3</div><div><h3>감지 상황 대응</h3><p>화재 등 이벤트가 표시되면 감지 상황 → 출동 진행 → 현장 확인·조치 순서로 확인합니다.</p></div></div>
+    <h3>분리수거</h3><p>순찰 당직 화면의 초록색 <b>분리수거</b> 버튼 또는 상위 메뉴의 분리수거 탭을 사용합니다. Left Arm이 water와 trash를 구분해 지정 수거함에 배치합니다.</p>
+  </section>
+
+  <section id="arms"><h2>7. 로봇암 기능</h2><table><thead><tr><th>기능</th><th>대상</th><th>동작</th></tr></thead><tbody>
+    <tr><td>선물주기</td><td>Dual Arm</td><td>양팔 선물 전달 시나리오 실행</td></tr><tr><td>교보재 올리기</td><td>Left Arm</td><td>AprilTag 0 교보재 픽업 후 지정 위치에 배치</td></tr><tr><td>분리수거</td><td>Left Arm</td><td>trash는 빨간 상자, water는 파란 상자로 분류</td></tr><tr><td>얼굴인식</td><td>Left/Right</td><td>등록·미등록 얼굴 검출 및 알림</td></tr><tr><td>화재감지</td><td>Left/Right</td><td>화염 탐색·추종 후 진압 여부 확인</td></tr><tr><td>추종</td><td>Left/Right</td><td>등록 얼굴을 탐색해 화면 중앙으로 추종</td></tr>
+  </tbody></table>
+    <h3>로봇암 현황</h3><p>관리자 메뉴의 <b>관리 → 로봇암 현황</b>에서 Left Arm, Right Arm, Dual Arm을 선택할 수 있습니다. 서버 연결, 카메라, 기능 상태, 동작 버튼과 실시간 로그를 확인합니다.</p>
+    <div class="warning">얼굴인식, 화재감지, 추종은 같은 팔에서 동시에 실행되지 않습니다. 하나를 켜면 다른 비전 기능은 자동으로 꺼집니다.</div>
+  </section>
+
+  <section id="status"><h2>8. 로봇 현황·알림·이벤트</h2><div class="grid">
+    <div class="card"><h3>로봇 현황</h3><p>Pinky별 연결, 모드, 배터리, 위치를 확인하고 수업 보조 또는 순찰 당직 화면으로 이동합니다.</p></div>
+    <div class="card"><h3>알림</h3><p>현재 확인이 필요한 화재·경고·긴급정지 알림을 최신순으로 확인합니다.</p></div>
+    <div class="card"><h3>종합 이벤트</h3><p>로그인, 명령, 모드 변경, 온라인 상태, 로봇팔 실행 결과를 검색하고 시간순으로 확인합니다.</p></div>
+  </div></section>
+
+  <section id="estop"><h2>9. 비상정지</h2><div class="danger"><strong>충돌 위험, 예상하지 못한 이동, 사람 접근 시 즉시 화면 상단의 빨간색 정지 버튼을 누릅니다.</strong></div>
+    <h3>전체 정지</h3><p><b>전 로봇 즉시 정지</b>는 이동로봇과 로봇팔에 정지 명령을 전달합니다. 상황이 안전해진 뒤에만 정지 해제를 누릅니다.</p>
+    <h3>개별 정지</h3><p>목록에서 Pinky, Left Arm, Right Arm 또는 Dual Arm을 선택한 뒤 해당 행의 정지 버튼을 누릅니다.</p>
+    <div class="warning">Dual Arm 정지는 선물주기처럼 양팔 시나리오로 실행된 동작을 멈출 때 사용합니다. 정지 후에는 장치 주변을 확인하고 필요하면 Home 동작으로 복귀시킵니다.</div>
+  </section>
+
+  <section id="finish"><h2>10. 정상 종료</h2><div class="step"><div class="num">1</div><div><h3>임무 종료</h3><p>순찰과 수업 보조를 종료하고 Pinky를 홈으로 복귀시킵니다.</p></div></div><div class="step"><div class="num">2</div><div><h3>로봇팔 안전 자세</h3><p>진행 중인 동작이 없는지 확인하고 필요하면 로봇암 현황에서 Home을 실행합니다.</p></div></div><div class="step"><div class="num">3</div><div><h3>전체 종료</h3><p>통합 실행기의 전체 종료 버튼을 사용합니다. 강제로 창만 닫기 전에 프로세스 상태를 확인합니다.</p></div></div></section>
+
+  <section id="trouble"><h2>11. 문제 해결</h2><table><thead><tr><th>증상</th><th>확인 및 조치</th></tr></thead><tbody>
+    <tr><td>GUI가 열리지 않음</td><td>통합 실행기에서 Web GUI 상태를 확인하고 브라우저에서 <code>http://127.0.0.1:8100</code>을 직접 엽니다.</td></tr>
+    <tr><td>로봇팔 기능이 실행되지 않음</td><td>AI Server와 해당 Arm이 실행 중인지 확인한 뒤 로봇암 현황의 서버 상태와 로그를 확인합니다.</td></tr>
+    <tr><td>카메라 영상이 없음</td><td>카메라 연결과 다른 프로그램의 점유 여부를 확인하고 해당 팔 클라이언트를 재시작합니다.</td></tr>
+    <tr><td>얼굴을 인식하지 못함</td><td>조명과 얼굴 방향을 조정합니다. 등록 사용자 사진 및 얼굴 데이터가 준비되어 있는지 관리자에게 문의합니다.</td></tr>
+    <tr><td>Pinky가 오프라인</td><td>전원, Wi-Fi, IP와 ROS Domain을 확인하고 통합 실행기에서 해당 Pinky 항목을 다시 시작합니다.</td></tr>
+    <tr><td>버튼이 비활성화됨</td><td>교실이동·홈복귀·모션 지시는 얼굴 인증이 필요합니다. 로봇 선택 또는 현재 임무 상태도 확인합니다.</td></tr>
+  </tbody></table></section>
+
+  <section id="quick"><h2>12. 빠른 운영 점검표</h2><ul class="checklist"><li>작업 반경과 이동 경로가 안전하다.</li><li>AI Server, Web GUI, 사용할 Arm/Pinky 상태가 실행 중이다.</li><li>IP와 ROS Domain이 실제 장치와 일치한다.</li><li>홈 화면에서 온라인 상태와 배터리를 확인했다.</li><li>기능 실행 전 대상 장치와 확인창 내용을 확인했다.</li><li>비상정지 버튼의 위치와 개별 장치 선택 방법을 알고 있다.</li><li>종료 전에 임무 종료와 홈 복귀를 완료했다.</li></ul></section>
+</main>
+<a class="top" href="#top" aria-label="맨 위로">↑</a>
+<footer>WaSaB Integrated System · User Manual v1.0</footer>
+</body>
+</html>

@@ -25,5 +25,6 @@ log/
 # Secrets
 .env
 *.key
+Service/WasabAIServer/FaceDB/
 # GitHub tokens accidentally created as files
 ghp_*
