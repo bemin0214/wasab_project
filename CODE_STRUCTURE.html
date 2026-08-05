@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>WaSaB 통합 시스템 코드 구조</title>
+  <style>
+    :root{--bg:#f5f7fb;--card:#fff;--ink:#172033;--muted:#647089;--line:#dce2ec;--blue:#2f6df0;--green:#16865b;--yellow:#e3a008;--red:#d63b31}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;line-height:1.6}
+    header{background:linear-gradient(135deg,#12203c,#244f9c);color:#fff;padding:52px 24px} header>div,main{max-width:1100px;margin:auto}
+    h1{margin:0 0 8px;font-size:34px} header p{margin:0;color:#dbe7ff} main{padding:28px 20px 60px}
+    h2{margin:34px 0 14px;font-size:23px} h3{margin:0 0 6px;font-size:16px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 4px 16px #18223a0a}.card p{color:var(--muted);margin:4px 0}
+    .tag{display:inline-block;border-radius:20px;padding:3px 9px;font-size:12px;font-weight:700;background:#edf2ff;color:var(--blue);margin-bottom:9px}
+    pre{margin:0;background:#111827;color:#dce7ff;border-radius:14px;padding:20px;overflow:auto;font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace}
+    .flow{display:flex;align-items:stretch;gap:10px;overflow:auto;padding-bottom:6px}.node{min-width:170px;flex:1;background:#fff;border:2px solid var(--line);border-radius:12px;padding:15px;text-align:center}.arrow{align-self:center;color:var(--blue);font-size:24px;font-weight:800}
+    .node b{display:block}.node span{font-size:12px;color:var(--muted)}table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px #18223a0a}
+    th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}th{background:#eef3fb}code{background:#edf1f7;border-radius:5px;padding:2px 5px;color:#264b91}
+    .note{border-left:5px solid var(--yellow);background:#fff8df;padding:13px 16px;border-radius:8px}.green{border-color:#bfe6d4}.blue{border-color:#c9d8ff}.yellow{border-color:#f2d88e}
+    footer{color:var(--muted);text-align:center;padding:24px}@media(max-width:760px){.grid{grid-template-columns:1fr}.flow{flex-direction:column}.arrow{transform:rotate(90deg)}h1{font-size:27px}}
+  </style>
+</head>
+<body>
+<header><div><h1>WaSaB 통합 시스템</h1><p>배포 코드 구조 · 구성요소 역할 · 데이터 및 명령 흐름</p></div></header>
+<main>
+  <h2>시스템 개요</h2>
+  <div class="grid">
+    <section class="card blue"><span class="tag">Service</span><h3>AI 및 통합 서버</h3><p>객체·얼굴·화재 인식, 로봇팔 명령 API, 인증, 로봇 상태와 이벤트를 처리합니다.</p></section>
+    <section class="card green"><span class="tag">Device</span><h3>Robot &amp; Robot Arm</h3><p>Pinky 이동·순찰·도킹과 JetCobot 팔 제어, 카메라, 그리퍼 동작을 수행합니다.</p></section>
+    <section class="card yellow"><span class="tag">UI</span><h3>통합 Web GUI</h3><p>수업 보조, 순찰, 로봇암 현황, 알림과 비상정지를 한 화면에서 제공합니다.</p></section>
+  </div>
+
+  <h2>실행 및 데이터 흐름</h2>
+  <div class="flow">
+    <div class="node"><b>PyQt 통합 실행기</b><span>선택 항목·IP·Domain</span></div><div class="arrow">→</div>
+    <div class="node"><b>AI Server :8000</b><span>검출·팔 API·카메라</span></div><div class="arrow">↔</div>
+    <div class="node"><b>WebService :8100</b><span>인증·프록시·ROS bridge</span></div><div class="arrow">↔</div>
+    <div class="node"><b>Web GUI</b><span>사용자 명령·상태·알림</span></div>
+  </div>
+  <div class="flow" style="margin-top:12px">
+    <div class="node"><b>Left / Right Arm</b><span>HTTP/UDP·카메라·관절 제어</span></div><div class="arrow">↔</div>
+    <div class="node"><b>AI Server</b><span>명령 전달 및 비전 결과</span></div><div class="arrow">↔</div>
+    <div class="node"><b>WebService</b><span>웹 API와 ESTOP 중계</span></div><div class="arrow">↔</div>
+    <div class="node"><b>Pinky ROS 2</b><span>Domain 51~54 / Console 50</span></div>
+  </div>
+
+  <h2>최상위 코드 구조</h2>
+  <pre>roscamp-repo-3/
+├── Device/
+│   └── WasabBot/
+│       ├── WasabArmController/    # 왼팔·오른팔 클라이언트, 보정값, mimic 기능
+│       ├── WasabController/       # 장치 제어 구성
+│       └── WasabMoveController/   # Pinky bringup, 센서, 이동 및 navigation
+│           ├── wasab_navigation/  # localization·docking·patrol
+│           └── wasab_robot_agent/ # heartbeat·명령 relay
+├── Service/
+│   ├── WasabAIServer/
+│   │   ├── AIService/ai_service/  # FastAPI AI/로봇팔 서버 (:8000)
+│   │   ├── AIService/face-recog/  # 얼굴인식·화재감지·추종
+│   │   └── FaceDB/                # 등록 얼굴과 encoding
+│   └── WasabServer/
+│       ├── Launcher/              # PyQt6 통합 실행기
+│       ├── WebService/            # 통합 웹 API (:8100), ROS/팔 프록시
+│       ├── scripts/               # 통합 실행·종료·순찰 보조 스크립트
+│       ├── OpService/             # 운영 서비스
+│       └── DB/                    # 서비스 데이터
+├── UI/
+│   ├── mobile/user_gui/frontend/  # HTML/CSS/JavaScript 통합 웹앱
+│   └── pc/                        # Desktop/Admin GUI 및 실행 항목</pre>
+
+  <h2>핵심 파일</h2>
+  <table>
+    <thead><tr><th>파일</th><th>역할</th></tr></thead>
+    <tbody>
+      <tr><td><code>Launcher/wasab_launcher.py</code></td><td>선택한 서버, 팔, Pinky, GUI를 시작·종료하는 PyQt 실행기</td></tr>
+      <tr><td><code>ai_service/run_server.py</code></td><td>YOLO, grasp plan과 로봇팔 API가 포함된 AI 서버 시작점</td></tr>
+      <tr><td><code>WasabArmController/run_client.py</code></td><td>각 JetCobot의 카메라·관절·그리퍼 명령 클라이언트</td></tr>
+      <tr><td><code>WebService/wasab_web_service/main.py</code></td><td>웹 API 조립, 인증, ROS bridge와 정적 GUI 서빙</td></tr>
+      <tr><td><code>WebService/wasab_web_service/server.py</code></td><td>명령·상태·이벤트·로봇팔 프록시 API 라우트</td></tr>
+      <tr><td><code>frontend/index.html</code></td><td>통합 GUI 화면과 메뉴 구조</td></tr>
+      <tr><td><code>frontend/app.js</code></td><td>GUI 상태, API 통신, 기능 매핑, 알림과 ESTOP 처리</td></tr>
+      <tr><td><code>frontend/styles.css</code></td><td>모바일/데스크톱 반응형 디자인</td></tr>
+      <tr><td><code>config/robots.yaml</code></td><td>Pinky ID, 주소, 역할 등 WebService 로봇 구성</td></tr>
+    </tbody>
+  </table>
+
+  <h2>웹 기능 매핑</h2>
+  <table>
+    <thead><tr><th>사용자 기능</th><th>대상</th><th>내부 명령</th><th>동작</th></tr></thead>
+    <tbody>
+      <tr><td>선물주기</td><td>Dual Arm</td><td><code>gift-giving</code></td><td>양팔 선물 전달 시나리오</td></tr>
+      <tr><td>교보재 올리기</td><td>Left Arm</td><td><code>help</code></td><td>AprilTag 0 교보재 Pick &amp; Place</td></tr>
+      <tr><td>분리수거</td><td>Left Arm</td><td><code>recycle</code></td><td>trash/water를 빨강/파랑 수거함으로 분류</td></tr>
+      <tr><td>비상정지</td><td>Pinky / Left / Right / Dual</td><td><code>stop</code></td><td>선택 장치 또는 전체 장치 즉시 정지</td></tr>
+    </tbody>
+  </table>
+
+  <h2>운영 시 주의사항</h2>
+  <div class="note">로봇을 실행하기 전에 작업 반경을 비우고 카메라·시리얼 장치·IP·ROS Domain을 확인하세요. 배포 전 SSH 인증 정보와 웹 관리자 데이터를 운영 환경에 맞게 변경해야 합니다.</div>
+</main>
+<footer>WaSaB Integrated Deployment · 2026-08-03</footer>
+</body>
+</html>

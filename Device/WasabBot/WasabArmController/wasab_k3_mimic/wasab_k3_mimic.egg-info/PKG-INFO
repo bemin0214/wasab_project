@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: wasab_k3_mimic
+Version: 0.1.0
+Summary: WaSaB K3 single-arm motion mimic PoC
+Maintainer: gjkong
+Maintainer-email: skong097@gmail.com
+License: MIT
+Requires-Dist: setuptools
+Provides-Extra: test
+Requires-Dist: pytest; extra == "test"
+Dynamic: license
+Dynamic: maintainer
+Dynamic: maintainer-email
+Dynamic: provides-extra
+Dynamic: requires-dist
+Dynamic: summary
