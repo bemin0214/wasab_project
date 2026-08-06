@@ -38,39 +38,7 @@ WaSaB는 **Workmate + School + Bot**의 의미를 담은 학교 업무 지원용
 
 ## 시스템 구성
 
-```mermaid
-flowchart TB
-    subgraph UI["UI"]
-        ADMIN["PC AdminGUI"]
-        USER["Mobile UserGUI"]
-    end
-
-    subgraph SERVICE["Service"]
-        WEB["WaSaB WebService"]
-        OP["WaSaB OpService"]
-        DB["WaSaB DB"]
-        AI["AI Service"]
-        FACE["FaceDB"]
-    end
-
-    subgraph DEVICE["Device"]
-        CTRL["WaSaB Controller"]
-        MOVE["WaSaB MoveController"]
-        ARM["WaSaB ArmController"]
-        STREAM["Camera Streamer"]
-    end
-
-    ADMIN --> WEB
-    USER --> WEB
-    WEB --> OP
-    OP --> DB
-    OP --> AI
-    FACE --> AI
-    OP --> CTRL
-    CTRL --> MOVE
-    CTRL --> ARM
-    STREAM --> AI
-```
+![WaSaB 시스템 아키텍처](docs/assets/system-architecture.png)
 
 ## 저장소 구조
 
@@ -88,7 +56,8 @@ WaSaB/
 │  └─ pc/                       # 데스크톱 실행 항목
 ├─ DEPLOYMENT_GUIDE.md
 ├─ RUN_GUIDE.md
-└─ USER_MANUAL.html
+├─ USER_MANUAL.md
+└─ CODE_STRUCTURE.md
 ```
 
 ## 요구 환경
@@ -209,8 +178,8 @@ export WASAB_SSH_PASSWORD='<integration-script-password>'
 - [배포 가이드](DEPLOYMENT_GUIDE.md)
 - [실행 가이드](RUN_GUIDE.md)
 - [작업 환경 가정](WORKING_ASSUMPTIONS.md)
-- [사용자 매뉴얼](USER_MANUAL.html)
-- [코드 구조](CODE_STRUCTURE.html)
+- [사용자 매뉴얼](USER_MANUAL.md)
+- [코드 구조](CODE_STRUCTURE.md)
 
 ## 문제 해결
 
