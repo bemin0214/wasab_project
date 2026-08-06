@@ -38,7 +38,7 @@ WaSaB는 **Workmate + School + Bot**의 의미를 담은 학교 업무 지원용
 
 ## 시스템 구성
 
-![WaSaB 시스템 아키텍처](docs/assets/system-architecture.png)
+![WaSaB 시스템 아키텍처](docs/assets/WaSaB_Architecture.png)
 
 ## 저장소 구조
 
