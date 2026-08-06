@@ -1,26 +1,75 @@
-# WaSaB
+# WaSaB - School Workmate Robot
 
-WaSaB는 이동 로봇, 양팔 로봇, AI 인식 서버, 운영용 Web GUI를 하나의 저장소에서 실행·관리하기 위한 통합 로봇 시스템입니다.
+WaSaB는 **Workmate + School + Bot**의 의미를 담은 학교 업무 지원용 통합 로봇 플랫폼입니다. 교사를 안전하게 추종하고, 교보재 운반과 선물 전달을 지원하며, 교내를 순찰하면서 화재·외부인을 감지하고 재활용품을 분류합니다.
+
+> 수업 보조 · 교내 순찰 · 로봇암 제어를 위한 통합 로봇 플랫폼
 
 ## 주요 기능
 
-- JetCobot 좌·우 로봇팔 제어 및 Dual Arm 작업
-- Pinky 이동 로봇의 주행, 순찰, 도킹 및 상태 중계
-- YOLO 기반 객체·화재 감지와 얼굴 인식·추적
-- 운영자용 통합 Web GUI와 데스크톱 실행기
-- ROS 2 기반 장치 간 통신 및 다중 로봇 관리
+- **AI 인지·추종·안전 감지**: 등록된 교사와 외부인, 손동작, 화재를 인식하고 안전거리를 유지하며 추종
+- **자율주행·순찰**: ROS 2 기반 위치·지도·경로 계획, 웨이포인트 순찰, 장애물 회피 및 AprilTag 기반 충전 거점 복귀
+- **Manipulation**: 카메라 인지와 좌표 변환을 결합한 교보재 운반, 분리수거, 양팔 선물 전달
+- **통합 GUI**: 얼굴 로그인, 전체 현황, 순찰·로봇 상태, 이벤트 알림을 PC와 모바일에서 제공
+- **통합 제어**: 이동 로봇과 좌·우 JetCobot 로봇팔을 하나의 운영 흐름에서 관리
+
+## 운영 시나리오
+
+### 선생님 지원
+
+1. 등록된 선생님을 인식하고 안전거리에서 추종합니다.
+2. 교보재를 한팔로 집어 교실 또는 지정 위치까지 운반합니다.
+3. 손바닥 제스처를 인식한 뒤 양팔 협업으로 학생에게 선물을 전달합니다.
+
+### 교내 순찰
+
+1. 지정 경로의 웨이포인트를 따라 순찰하며 장애물을 회피합니다.
+2. 화재나 외부인을 감지하면 정지하고 관리자 시스템에 즉시 알립니다.
+3. 순찰 중 발견한 캔, 종이류, 페트병 등의 재활용품을 인식하고 분류합니다.
+4. 순찰 완료 후 AprilTag를 기준으로 충전 거점에 복귀합니다.
+
+## 기술 스택
+
+| 영역 | 기술 |
+|---|---|
+| Robot / Middleware | ROS 2 Jazzy, Nav2, SLAM |
+| AI / Vision | YOLO26s, OpenCV, MediaPipe, InsightFace |
+| Backend | Python, FastAPI |
+| Platform | Ubuntu |
 
 ## 시스템 구성
 
 ```mermaid
-flowchart LR
-    UI["통합 Web GUI"] --> WS["WaSaB WebService"]
-    WS --> AI["AI / Robot API Server"]
-    AI --> LA["Left JetCobot"]
-    AI --> RA["Right JetCobot"]
-    WS --> MR["Pinky Mobile Robots"]
-    MR --> NAV["Navigation · Patrol · Docking"]
-    AI --> CV["Detection · Face · Tracking"]
+flowchart TB
+    subgraph UI["UI"]
+        ADMIN["PC AdminGUI"]
+        USER["Mobile UserGUI"]
+    end
+
+    subgraph SERVICE["Service"]
+        WEB["WaSaB WebService"]
+        OP["WaSaB OpService"]
+        DB["WaSaB DB"]
+        AI["AI Service"]
+        FACE["FaceDB"]
+    end
+
+    subgraph DEVICE["Device"]
+        CTRL["WaSaB Controller"]
+        MOVE["WaSaB MoveController"]
+        ARM["WaSaB ArmController"]
+        STREAM["Camera Streamer"]
+    end
+
+    ADMIN --> WEB
+    USER --> WEB
+    WEB --> OP
+    OP --> DB
+    OP --> AI
+    FACE --> AI
+    OP --> CTRL
+    CTRL --> MOVE
+    CTRL --> ARM
+    STREAM --> AI
 ```
 
 ## 저장소 구조
@@ -44,9 +93,9 @@ WaSaB/
 
 ## 요구 환경
 
-- Ubuntu 22.04 이상
-- Python 3.10 이상
-- ROS 2 Humble
+- Ubuntu (ROS 2 Jazzy 지원 환경)
+- Python 3 (배포 환경에 맞는 버전)
+- ROS 2 Jazzy
 - 같은 LAN에 연결된 운영 PC, JetCobot, Pinky 로봇
 - 운영 PC의 AI 서버용 Python 가상환경
 
